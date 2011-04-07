@@ -1,0 +1,31 @@
+Here is the modificatio of j4mie's idiorm. 
+https://github.com/j4mie/idiorm
+
+
+Changes are a little bit dirty....
+
+1. Allow any order of find_many(), count(), find_one();
+
+example: $objs = $Modeled->find_many();
+		 $obj = $Modeled->find_one();
+		 $count = $Modeled->count();
+		 $objs = $Modeled->where_equal('column_name', $value)->find_one();
+		 
+		 
+2. Allow combined primary key defined in Paris extended model;
+
+example:
+class somthing extends Model {
+	public static $_table = 'table';
+	public static $_id_column = array('column_1', 'column_2');	
+}
+
+3. Allow to use $objs->where_conditions('column_name', $value)->delete() besides $obj->delete();
+
+example:  $objs = $Modeled->where_equal('column_name', $value);
+		  $objs->delete();
+		  
+
+4. Postgresql to get last insert ID using RETURNING statement if ID is serial. 
+
+5. Print out the last executed SQL statement along with PDOException
