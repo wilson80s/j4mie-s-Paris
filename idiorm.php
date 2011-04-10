@@ -1249,7 +1249,18 @@
 				return $success;								
 			}
         }
-		
+
+	public function get_unique_column_names() {
+		$result = $this->find_one();
+		$table_fields = $result->as_array();
+		$fields = array();
+		foreach ($table_fields as $field => $field_value) {
+			if (!in_array($field, $fields)) 
+			$fields[] = $field;
+		}
+		return $fields;
+	}
+
         // --------------------- //
         // --- MAGIC METHODS --- //
         // --------------------- //
