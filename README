@@ -1,9 +1,6 @@
 Here is the modificatio of j4mie's idiorm. 
 https://github.com/j4mie/idiorm
 
-
-Changes are a little bit dirty....
-
 1. Allow any order of find_many(), count(), find_one();
 
 example: $objs = $Modeled->find_many();
@@ -25,7 +22,11 @@ class somthing extends Model {
 example:  $objs = $Modeled->where_equal('column_name', $value);
 		  $objs->delete();
 		  
-
 4. Postgresql to get last insert ID using RETURNING statement if ID is serial. 
 
-5. Print out the last executed SQL statement along with PDOException
+5. Print out the last executed SQL statement along with PDOException.
+
+6. New methods db_query(), db_quote() for building and executing the raw queries.
+
+7. fetching modes options.
+

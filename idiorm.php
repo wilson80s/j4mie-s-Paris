@@ -1,5 +1,5 @@
 <?php
-	require_once '_config.php';
+
     /**
      *
      * Idiorm
@@ -65,6 +65,17 @@
             'logging' => false,
             'caching' => false,
         );
+		
+		protected static $fetchMethodMapping = array(
+			'assoc' => PDO::FETCH_ASSOC,
+			'bound' => PDO::FETCH_BOUND,
+			'both' => PDO::FETCH_BOTH,
+			'class' => PDO::FETCH_CLASS,
+			'into' => PDO::FETCH_INTO,
+			'lazy' => PDO::FETCH_LAZY,
+			'num' => PDO::FETCH_NUM,
+			'obj' => PDO::FETCH_OBJ
+		);
 
         // Database connection, instance of the PDO class
         protected static $_db;
@@ -997,7 +1008,7 @@
 				$success = $statement->execute($this->_values);
 			}
 			catch (PDOException $e) {
-				die('<br/>' .  $this->get_last_query() . '<br/>' . $e);
+				die('<br/>' .  self::get_last_query() . '<br/>' . $e);
 			}				
 
             $rows = array();
@@ -1089,7 +1100,6 @@
          * to the database.
          */
         public function save() {
-		
             $query = array();
             $values = array_values($this->_dirty_fields);
 
@@ -1120,7 +1130,7 @@
 				$success = $statement->execute($values);
 			}
 			catch (PDOException $e) {
-				die('<br/>' .  $this->get_last_query() . '<br/>' . $e);
+				die('<br/>' .  self::get_last_query() . '<br/>' . $e);
 			}
 			
             // If we've just inserted a new record, set the ID of this object
@@ -1211,7 +1221,7 @@
 					$success = $statement->execute($this->_values);
 				}
 				catch (PDOException $e) {
-					die('<br/>' .  $this->get_last_query() . '<br/>' . $e);
+					die('<br/>' .  self::get_last_query() . '<br/>' . $e);
 				}				
 				return $success;				
 			}
@@ -1244,23 +1254,71 @@
 					$success = $statement->execute($params);
 				}
 				catch (PDOException $e) {
-					die('<br/>' .  $this->get_last_query() . '<br/>' . $e);
+					die('<br/>' .  self::get_last_query() . '<br/>' . $e);
 				}				
 				return $success;								
 			}
         }
-
-	public function get_unique_column_names() {
-		$result = $this->find_one();
-		$table_fields = $result->as_array();
-		$fields = array();
-		foreach ($table_fields as $field => $field_value) {
-			if (!in_array($field, $fields)) 
-			$fields[] = $field;
+		
+		public function get_unique_column_names() {
+			$result = $this->find_one();
+			$table_fields = $result->as_array();
+			$fields = array();
+			foreach ($table_fields as $field => $field_value) {
+				if (!in_array($field, $fields)) 
+				$fields[] = $field;
+			}
+			return $fields;
 		}
-		return $fields;
-	}
+		
+		public static function db_query($sql, $fetch_type = PDO::FETCH_ASSOC) {
+			if (!is_object(self::$_db)) {
+				self::for_table('');
+			}
+			
+			if (array_key_exists(strtolower($fetch_type),self::$fetchMethodMapping)) {
+				$fetch_type = self::$fetchMethodMapping[$fetch_type];
+			}
+			
+			self::_log_query($sql, array());
+			$statement = self::$_db->prepare($sql);
+			try {
+				$success = $statement->execute(array());
+			}
+			catch (Exception $e) {
+				die('<br/>' .  self::get_last_query() . '<br/>' . $e);
+			}
+			
+			if ($statement->columnCount() == 0) {
+				return $statement->rowCount();
+			}
+			else {
+				$rows = array();
+				while ($row = $statement->fetch($fetch_type)) {
+					$rows[] = $row;
+				}
 
+				if (self::$_config['caching']) {
+					self::_cache_query_result($cache_key, $rows);
+				}
+
+				return $rows;
+			}
+		}
+		
+		public static function db_string($str) {
+			if (!is_object(self::$_db)) {
+				self::for_table('');
+			}
+			
+			if(is_null($str)) {
+				return "NULL";
+			}
+			else if (empty($str)) {
+				return "NULL";
+			}
+			else return self::$_db->quote($str);
+		}		
         // --------------------- //
         // --- MAGIC METHODS --- //
         // --------------------- //
